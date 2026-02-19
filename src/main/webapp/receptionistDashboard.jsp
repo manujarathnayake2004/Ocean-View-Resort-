@@ -18,7 +18,7 @@
     <li><a href="addReservation.jsp">Add New Reservation</a></li>
     <li><a href="listReservations">View Reservations</a></li>
     <li><a href="searchReservation.jsp">Search Reservation</a></li>
-    <li><a href="billPrint.jsp">Calculate & Print Bill</a></li>
+    <li><a href="searchBill.jsp">Calculate & Print Bill</a></li>
     <li><a href="<%=request.getContextPath()%>/logout">Logout</a></li>
 </ul>
 </body>

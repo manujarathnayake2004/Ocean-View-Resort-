@@ -3,53 +3,47 @@ package com.oceanview.servlet;
 import com.oceanview.dao.UserDAO;
 import com.oceanview.model.User;
 
+import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.*;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
 
-@WebServlet("/login")
+@WebServlet(urlPatterns = {"/login", "/LoginServlet"})
 public class LoginServlet extends HttpServlet {
 
     private final UserDAO userDAO = new UserDAO();
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
 
         String username = req.getParameter("username");
         String password = req.getParameter("password");
 
-        if (username == null || username.trim().isEmpty() ||
-                password == null || password.trim().isEmpty()) {
-            resp.sendRedirect("login.jsp?err=Please+enter+username+and+password");
-            return;
-        }
+        User user = userDAO.validateUser(username, password);
 
-        User u = userDAO.login(username.trim(), password.trim());
+        if (user != null) {
+            HttpSession session = req.getSession(true);
+            session.setAttribute("loggedUser", user.getUsername());
+            session.setAttribute("loggedRole", user.getRole());
 
-        if (u == null) {
-            resp.sendRedirect("login.jsp?err=Invalid+username+or+password");
-            return;
-        }
+            String role = user.getRole();
 
-        // Create session
-        HttpSession session = req.getSession(true);
-        session.setAttribute("loggedUser", u.getUsername());
-        session.setAttribute("loggedRole", u.getRole());
-        session.setMaxInactiveInterval(30 * 60);
+            if ("ADMIN".equalsIgnoreCase(role)) {
+                resp.sendRedirect(req.getContextPath() + "/dashboard.jsp");
+            } else if ("RECEPTIONIST".equalsIgnoreCase(role)) {
+                resp.sendRedirect(req.getContextPath() + "/receptionistDashboard.jsp");
+            } else if ("MANAGER".equalsIgnoreCase(role)) {
+                resp.sendRedirect(req.getContextPath() + "/managerDashboard.jsp");
+            } else {
+                resp.sendRedirect(req.getContextPath() + "/login.jsp?msg=Role+not+assigned");
+            }
 
-        // ✅ IMPORTANT: DO NOT change your existing admin page
-        // ADMIN -> dashboard.jsp (your current admin page)
-        // RECEPTIONIST -> receptionistDashboard.jsp
-        // MANAGER -> managerDashboard.jsp
-
-        if ("ADMIN".equalsIgnoreCase(u.getRole())) {
-            resp.sendRedirect("dashboard.jsp");
-        } else if ("RECEPTIONIST".equalsIgnoreCase(u.getRole())) {
-            resp.sendRedirect("receptionistDashboard.jsp");
-        } else if ("MANAGER".equalsIgnoreCase(u.getRole())) {
-            resp.sendRedirect("managerDashboard.jsp");
         } else {
-            resp.sendRedirect("login.jsp?err=Role+not+recognized");
+            resp.sendRedirect(req.getContextPath() + "/login.jsp?msg=Invalid+Username+or+Password");
         }
     }
 }

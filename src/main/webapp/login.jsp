@@ -2,171 +2,294 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
     <title>Ocean View Resort | Login</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 
     <style>
         :root{
-            --p1:#6D28D9;
-            --p2:#A78BFA;
-            --w:#fff;
+            --p1:#6D28D9;   /* purple */
+            --p2:#A78BFA;   /* light purple */
+            --w:#FFFFFF;
+
             --text:rgba(255,255,255,0.92);
             --muted:rgba(255,255,255,0.72);
-            --glass:rgba(255,255,255,0.12);
+
+            --glass:rgba(255,255,255,0.13);
             --glass2:rgba(255,255,255,0.08);
             --border:rgba(255,255,255,0.22);
+
             --shadow: 0 18px 70px rgba(0,0,0,0.55);
         }
+
         *{box-sizing:border-box;}
         body{
             margin:0;
             font-family: "Segoe UI", Arial, sans-serif;
             min-height:100vh;
             color: var(--text);
+
+            /* Bright Luxury Background */
             background:
-                    radial-gradient(1200px 700px at 15% 10%, rgba(167,139,250,0.35), transparent 55%),
-                    radial-gradient(900px 600px at 85% 20%, rgba(109,40,217,0.30), transparent 55%),
-                    linear-gradient(120deg, rgba(8,6,20,0.72), rgba(8,6,20,0.35)),
+                    radial-gradient(1000px 600px at 20% 10%, rgba(167,139,250,0.25), transparent 60%),
+                    radial-gradient(900px 600px at 80% 20%, rgba(109,40,217,0.18), transparent 60%),
+                    linear-gradient(120deg, rgba(255,255,255,0.55), rgba(255,255,255,0.35)),
                     url("images/resort-bg.jpg") center/cover no-repeat fixed;
         }
+
         .page{
             min-height:100vh;
             display:flex;
             align-items:center;
             justify-content:center;
-            padding: 28px 16px;
+            padding: 36px 16px;
         }
-        .wrap{
-            width:min(1000px, 100%);
-            display:grid;
-            grid-template-columns: 1.1fr 0.9fr;
-            gap: 16px;
-        }
-        @media(max-width: 900px){
-            .wrap{grid-template-columns: 1fr;}
-        }
+
         .glass{
+            width: min(980px, 100%);
+            display:grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 18px;
+
             background: linear-gradient(180deg, var(--glass), var(--glass2));
             border: 1px solid var(--border);
-            border-radius: 22px;
+            border-radius: 26px;
             box-shadow: var(--shadow);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             overflow:hidden;
         }
-        .left{
-            padding: 26px;
-            min-height: 420px;
+
+        @media (max-width: 900px){
+            .glass{grid-template-columns:1fr;}
         }
+
+        /* LEFT INFO */
+        .left{
+            padding: 28px;
+            position:relative;
+            overflow:hidden;
+        }
+        .left::before{
+            content:"";
+            position:absolute;
+            inset:-80px;
+            background:
+                    radial-gradient(circle at 20% 15%, rgba(167,139,250,0.30), transparent 60%),
+                    radial-gradient(circle at 80% 70%, rgba(109,40,217,0.28), transparent 62%);
+            pointer-events:none;
+        }
+        .left-inner{position:relative;}
+
         .brand{
-            display:flex; align-items:center; gap:12px;
+            display:flex;
+            align-items:center;
+            gap: 12px;
+            margin-bottom: 18px;
         }
         .logo{
-            width:52px; height:52px; border-radius:16px;
-            border: 1px solid rgba(255,255,255,0.25);
-            overflow:hidden; background: rgba(255,255,255,0.10);
-            display:flex; align-items:center; justify-content:center;
+            width:52px; height:52px;
+            border-radius:16px;
+            border:1px solid rgba(255,255,255,0.25);
+            overflow:hidden;
+            background: rgba(255,255,255,0.10);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-weight:900;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.35);
         }
         .logo img{width:100%; height:100%; object-fit:cover;}
-        h1{margin:18px 0 10px; font-size:48px; line-height:1.05;}
-        p{color: var(--muted); line-height:1.7; margin:0;}
-        .tip{margin-top:16px; font-size:13px;}
-        .right{padding: 22px;}
-        .title{font-size:22px; font-weight:900; margin-bottom:12px;}
-        .msg{
-            margin-bottom: 12px;
-            padding: 10px 12px;
-            border-radius: 14px;
-            border:1px solid rgba(255,255,255,0.18);
-            background: rgba(255,255,255,0.08);
-            color: rgba(255,255,255,0.92);
+
+        .brand-text b{display:block; font-size:18px; letter-spacing:0.3px;}
+        .brand-text span{display:block; margin-top:2px; font-size:12px; color:var(--muted);}
+
+        h1{
+            margin: 22px 0 10px;
+            font-size: 40px;
+            line-height: 1.05;
+            letter-spacing: 0.6px;
+            text-shadow: 0 10px 26px rgba(0,0,0,0.35);
         }
-        .msg.err{border-color: rgba(255,80,80,0.55); background: rgba(255,0,0,0.12);}
-        label{display:block; margin:10px 0 6px; color: rgba(255,255,255,0.85); font-weight:700;}
+
+        .sub{
+            margin:0;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.7;
+            max-width: 520px;
+        }
+
+        .hint{
+            margin-top: 16px;
+            font-size: 12px;
+            color: rgba(255,255,255,0.65);
+        }
+
+        /* RIGHT FORM */
+        .right{
+            padding: 22px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+        }
+
+        .form-card{
+            width:100%;
+            max-width: 380px;
+            border-radius: 22px;
+            border: 1px solid rgba(255,255,255,0.18);
+            background: rgba(255,255,255,0.08);
+            padding: 18px;
+            position:relative;
+            overflow:hidden;
+        }
+        .form-card::before{
+            content:"";
+            position:absolute;
+            inset:-60px;
+            background: radial-gradient(circle at 25% 20%, rgba(167,139,250,0.20), transparent 55%);
+            pointer-events:none;
+        }
+        .form-inner{position:relative;}
+
+        .form-title{
+            font-size: 16px;
+            font-weight: 900;
+            letter-spacing: 0.4px;
+            margin: 4px 0 12px;
+        }
+
+        label{
+            display:block;
+            margin: 10px 0 6px;
+            font-size: 12px;
+            color: rgba(255,255,255,0.75);
+            letter-spacing:0.2px;
+        }
+
         input{
             width:100%;
-            padding: 14px 14px;
-            border-radius: 16px;
-            border:1px solid rgba(255,255,255,0.18);
-            background: rgba(255,255,255,0.10);
-            color: white;
+            padding: 12px 12px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.22);
+            background: rgba(10,8,22,0.35);
+            color: var(--w);
             outline:none;
         }
-        input:focus{border-color: rgba(167,139,250,0.65);}
+        input::placeholder{color: rgba(255,255,255,0.45);}
+        input:focus{
+            border-color: rgba(167,139,250,0.70);
+            box-shadow: 0 0 0 3px rgba(167,139,250,0.20);
+        }
+
         .btn{
             width:100%;
             margin-top: 14px;
-            padding: 14px 16px;
-            border-radius: 18px;
-            border: 0;
+            padding: 12px 14px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.22);
             font-weight: 900;
-            letter-spacing: .5px;
-            color: white;
-            background: linear-gradient(135deg, var(--p1), var(--p2));
+            letter-spacing: 0.3px;
             cursor:pointer;
+            color: var(--w);
+            background: linear-gradient(135deg, var(--p1), var(--p2));
+            box-shadow: 0 14px 34px rgba(109,40,217,0.35);
+            transition: transform .12s ease, filter .12s ease;
         }
-        .btn:hover{filter: brightness(1.05);}
+        .btn:hover{transform: translateY(-1px); filter: brightness(1.06);}
+
+        .msg{
+            margin-top: 10px;
+            font-size: 13px;
+            padding: 10px 12px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.18);
+            background: rgba(255,255,255,0.10);
+        }
+        .msg.err{border-color: rgba(255,80,80,0.35); background: rgba(255,80,80,0.12);}
+        .msg.ok{border-color: rgba(80,255,160,0.30); background: rgba(80,255,160,0.10);}
+
         .footer{
+            margin-top: 18px;
             text-align:center;
-            color: rgba(255,255,255,0.65);
-            margin-top: 14px;
             font-size: 12px;
+            color: rgba(255,255,255,0.60);
         }
     </style>
 </head>
+
 <body>
 <div class="page">
-    <div class="wrap">
 
-        <div class="glass left">
-            <div class="brand">
-                <div class="logo">
-                    <img src="images/logo.png" alt="Logo"
-                         onerror="this.style.display='none'; this.parentNode.innerHTML='OV'; this.parentNode.style.fontWeight='900';" />
+    <div class="glass">
+
+        <!-- LEFT -->
+        <div class="left">
+            <div class="left-inner">
+                <div class="brand">
+                    <div class="logo">
+                        <img src="images/logo.png" alt="Logo"
+                             onerror="this.style.display='none'; this.parentNode.innerHTML='OV';" />
+                    </div>
+                    <div class="brand-text">
+                        <b>Ocean View Resort</b>
+                        <span>Hotel Reservation & Billing System</span>
+                    </div>
                 </div>
-                <div>
-                    <div style="font-weight:900;font-size:18px;">Ocean View Resort</div>
-                    <div style="color:rgba(255,255,255,0.72);font-size:12px;">Hotel Reservation & Billing System</div>
+
+                <h1>Secure Login</h1>
+                <p class="sub">
+                    Please sign in to access the reservation and billing system.
+                    Your customer ID and mobile are protected with unique rules in the database.
+                </p>
+
+                <div class="hint">
+                    Tip: If you don’t have an account, ask the system admin to create one.
                 </div>
             </div>
-
-            <h1>Secure Login</h1>
-            <p>Please sign in to access the reservation and billing system.</p>
-            <p class="tip">Tip: If you don’t have an account, ask the admin to create one.</p>
         </div>
 
-        <div class="glass right">
-            <div class="title">Login to Continue</div>
+        <!-- RIGHT -->
+        <div class="right">
+            <div class="form-card">
+                <div class="form-inner">
+                    <div class="form-title">Login to Continue</div>
 
-            <%
-                String err = request.getParameter("err");
-                String msg = request.getParameter("msg");
-                if (err != null) {
-            %>
-            <div class="msg err"><%= err %></div>
-            <%
-            } else if (msg != null) {
-            %>
-            <div class="msg"><%= msg %></div>
-            <%
-                }
-            %>
+                    <%
+                        String msg = request.getParameter("msg");
+                        String err = request.getParameter("err");
+                        if (msg != null) {
+                    %>
+                    <div class="msg ok"><%= msg %></div>
+                    <% } %>
 
-            <form action="<%=request.getContextPath()%>/login" method="post">
-                <label>Username</label>
-                <input type="text" name="username" placeholder="admin / reception1 / manager1" required />
+                    <%
+                        if (err != null) {
+                    %>
+                    <div class="msg err"><%= err %></div>
+                    <% } %>
 
-                <label>Password</label>
-                <input type="password" name="password" placeholder="Enter password" required />
+                    <!-- Change action to your login servlet mapping -->
+                    <form action="<%=request.getContextPath()%>/login" method="post">
+                        <label>Username</label>
+                        <input type="text" name="username" required placeholder="Enter username">
 
-                <button class="btn" type="submit">LOGIN</button>
-            </form>
+                        <label>Password</label>
+                        <input type="password" name="password" required placeholder="Enter password">
 
-            <div class="footer">© <%= java.time.Year.now() %> Ocean View Resort</div>
+                        <button class="btn" type="submit">LOGIN</button>
+                    </form>
+
+                    <div class="footer">
+                        © <%= java.time.Year.now() %> Ocean View Resort
+                    </div>
+                </div>
+            </div>
         </div>
 
     </div>
+
 </div>
 </body>
 </html>

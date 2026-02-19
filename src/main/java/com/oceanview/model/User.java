@@ -1,24 +1,29 @@
 package com.oceanview.model;
 
 public class User {
-    private int userId;
     private String username;
-    private String passwordHash;
-    private String role;   // ADMIN / RECEPTIONIST / MANAGER
-    private String status; // ACTIVE / DISABLED
+    private String role;
 
-    public int getUserId() { return userId; }
-    public void setUserId(int userId) { this.userId = userId; }
+    public User() {}
 
-    public String getUsername() { return username; }
-    public void setUsername(String username) { this.username = username; }
+    public User(String username, String role) {
+        this.username = username;
+        this.role = role;
+    }
 
-    public String getPasswordHash() { return passwordHash; }
-    public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
+    public String getUsername() {
+        return username;
+    }
 
-    public String getRole() { return role; }
-    public void setRole(String role) { this.role = role; }
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
 }
