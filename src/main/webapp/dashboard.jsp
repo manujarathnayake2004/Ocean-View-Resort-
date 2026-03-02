@@ -345,13 +345,6 @@
                 <div class="panel">
                     <h3>Quick Notes</h3>
 
-                    <div class="note">
-                        <b>🛡️ Role Security</b>
-                        <p>
-                            Admin pages should load only when <b>loggedRole = ADMIN</b>.
-                            If you get access denied, check AuthFilter mappings.
-                        </p>
-                    </div>
 
                     <div class="note">
                         <b>🧾 Billing Tip</b>
@@ -368,12 +361,6 @@
                         </p>
                     </div>
 
-                    <div class="note">
-                        <b>✅ Suggestion</b>
-                        <p>
-                            Add a “User Management” page later for Admin to create Manager/Receptionist accounts.
-                        </p>
-                    </div>
                 </div>
             </div>
 
