@@ -250,7 +250,7 @@
             <div class="card">
                 <h3>➕ Add New Reservation</h3>
                 <p>Create a new booking with guest details and check-in/check-out dates.</p>
-                <a class="btn btn-primary" href="addReservation.jsp">Open →</a>
+                <a class="btn btn-primary" href="receptionistAddReservation.jsp">Open →</a>
             </div>
 
             <div class="card">
