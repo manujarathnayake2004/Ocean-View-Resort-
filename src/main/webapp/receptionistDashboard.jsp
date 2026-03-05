@@ -256,7 +256,7 @@
             <div class="card">
                 <h3>📋 View Reservations</h3>
                 <p>View all reservations and manage reservation list quickly.</p>
-                <a class="btn" href="listReservations.jsp">Open →</a>
+                <a class="btn" href="receptionistListReservations.jsp">Open →</a>
             </div>
 
             <div class="card">
