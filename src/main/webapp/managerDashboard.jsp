@@ -318,7 +318,7 @@
                     <h2>Manager Functions</h2>
 
                     <div class="actions">
-                        <a class="action primary" href="<%=request.getContextPath()%>/listReservations">
+                        <a class="action primary" href="<%=request.getContextPath()%>/managerListReservations.jsp">
                             <div class="left">
                                 <div class="ico">📋</div>
                                 <div class="txt">

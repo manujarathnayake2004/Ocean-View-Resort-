@@ -3,68 +3,64 @@ package com.oceanview.dao;
 import com.oceanview.model.User;
 import com.oceanview.util.DBConnection;
 
-import java.security.MessageDigest;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.sql.*;
 
 public class UserDAO {
 
-    public User validateUser(String username, String password) {
+    private boolean hasColumn(Connection con, String table, String column) throws SQLException {
+        DatabaseMetaData meta = con.getMetaData();
+        ResultSet rs = meta.getColumns(null, null, table, column);
+        boolean ok = rs.next();
+        rs.close();
+        return ok;
+    }
 
-        String sql = "SELECT username, password_hash, role, status FROM users WHERE username = ?";
+    public User login(String username, String password) {
+        Connection con = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
 
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        try {
+            con = DBConnection.getConnection();
 
-            if (con == null) return null;
+            boolean hasStatus = hasColumn(con, "users", "status");
 
-            ps.setString(1, username);
+            String sql;
+            if (hasStatus) {
+                sql = "SELECT u.user_id, u.role_id, r.role_name, u.username, u.full_name, u.status " +
+                        "FROM users u INNER JOIN roles r ON u.role_id = r.role_id " +
+                        "WHERE u.username=? AND u.password=? AND u.status='ACTIVE'";
+            } else {
+                sql = "SELECT u.user_id, u.role_id, r.role_name, u.username, u.full_name, 'ACTIVE' AS status " +
+                        "FROM users u INNER JOIN roles r ON u.role_id = r.role_id " +
+                        "WHERE u.username=? AND u.password=?";
+            }
 
-            try (ResultSet rs = ps.executeQuery()) {
+            ps = con.prepareStatement(sql);
+            ps.setString(1, username == null ? "" : username.trim());
+            ps.setString(2, password == null ? "" : password.trim());
 
-                if (rs.next()) {
-                    String dbPass = rs.getString("password_hash");
-                    String role = rs.getString("role");
-                    String status = null;
+            rs = ps.executeQuery();
 
-                    try {
-                        status = rs.getString("status");
-                    } catch (Exception ignore) {
-                        // if your table doesn't have status column
-                    }
-
-                    // If status is used, allow only ACTIVE
-                    if (status != null && !status.equalsIgnoreCase("ACTIVE")) {
-                        return null;
-                    }
-
-                    String inputHash = sha256(password);
-
-                    boolean ok = dbPass != null && (
-                            dbPass.equals(password) ||          // plain text match
-                                    dbPass.equalsIgnoreCase(inputHash)  // sha-256 match
-                    );
-
-                    if (ok) {
-                        return new User(rs.getString("username"), role);
-                    }
-                }
+            if (rs.next()) {
+                User user = new User();
+                user.setUserId(rs.getInt("user_id"));
+                user.setRoleId(rs.getInt("role_id"));
+                user.setRoleName(rs.getString("role_name"));   // IMPORTANT
+                user.setUsername(rs.getString("username"));
+                user.setFullName(rs.getString("full_name"));
+                user.setStatus(rs.getString("status"));
+                return user;
             }
 
         } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            try { if (rs != null) rs.close(); } catch (Exception ignored) {}
+            try { if (ps != null) ps.close(); } catch (Exception ignored) {}
+            try { if (con != null) con.close(); } catch (Exception ignored) {}
         }
 
         return null;
-    }
-
-    private String sha256(String text) throws Exception {
-        MessageDigest md = MessageDigest.getInstance("SHA-256");
-        byte[] hash = md.digest(text.getBytes("UTF-8"));
-
-        StringBuilder sb = new StringBuilder();
-        for (byte b : hash) sb.append(String.format("%02x", b));
-        return sb.toString();
     }
 }

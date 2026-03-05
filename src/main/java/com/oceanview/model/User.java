@@ -1,29 +1,28 @@
 package com.oceanview.model;
 
 public class User {
+    private int userId;
+    private int roleId;
+    private String roleName;   // NEW
     private String username;
-    private String role;
+    private String fullName;
+    private String status;
 
-    public User() {}
+    public int getUserId() { return userId; }
+    public void setUserId(int userId) { this.userId = userId; }
 
-    public User(String username, String role) {
-        this.username = username;
-        this.role = role;
-    }
+    public int getRoleId() { return roleId; }
+    public void setRoleId(int roleId) { this.roleId = roleId; }
 
-    public String getUsername() {
-        return username;
-    }
+    public String getRoleName() { return roleName; }
+    public void setRoleName(String roleName) { this.roleName = roleName; }
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
 
-    public String getRole() {
-        return role;
-    }
+    public String getFullName() { return fullName; }
+    public void setFullName(String fullName) { this.fullName = fullName; }
 
-    public void setRole(String role) {
-        this.role = role;
-    }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 }

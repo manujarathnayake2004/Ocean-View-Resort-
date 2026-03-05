@@ -12,35 +12,65 @@ import java.util.List;
 
 public class ReservationDAO {
 
-    // 1) Add Reservation (NO contact_number)
+    // 1) Add Reservation
     public boolean addReservation(Reservation r) {
-        boolean saved = false;
 
-        String sql = "INSERT INTO reservations " +
-                "(reservation_number, customer_id, customer_mobile, guest_name, address, room_type, check_in, check_out) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        // 1) Duplicate check (reservation_no is UNIQUE in DB)
+        //    Also check mobile as unique because your UI expects it.
+        String dupSql = "SELECT 1 FROM reservations WHERE reservation_no = ? OR guest_mobile = ? LIMIT 1";
 
-        try (Connection con = DBConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        // 2) Map roomType -> room_rate_id
+        String roomSql = "SELECT room_rate_id FROM room_rates WHERE room_type = ? LIMIT 1";
 
-            ps.setString(1, r.getReservationNumber());
-            ps.setString(2, r.getCustomerId());
-            ps.setString(3, r.getCustomerMobile());
-            ps.setString(4, r.getGuestName());
-            ps.setString(5, r.getAddress());
-            ps.setString(6, r.getRoomType());
-            ps.setDate(7, r.getCheckIn());
-            ps.setDate(8, r.getCheckOut());
+        // 3) Correct INSERT (matches your DB schema)
+        String insertSql = "INSERT INTO reservations " +
+                "(reservation_no, guest_name, guest_address, guest_mobile, room_rate_id, check_in, check_out) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
-            int rows = ps.executeUpdate();
-            saved = rows > 0;
+        try (Connection con = DBConnection.getConnection()) {
+
+            // --- Duplicate check ---
+            try (PreparedStatement psDup = con.prepareStatement(dupSql)) {
+                psDup.setString(1, r.getReservationNumber());
+                psDup.setString(2, r.getCustomerMobile());
+                try (ResultSet rsDup = psDup.executeQuery()) {
+                    if (rsDup.next()) {
+                        return false; // duplicate reservation no OR mobile
+                    }
+                }
+            }
+
+            // --- Get room_rate_id ---
+            int roomRateId = 0;
+            try (PreparedStatement psRoom = con.prepareStatement(roomSql)) {
+                psRoom.setString(1, r.getRoomType());
+                try (ResultSet rsRoom = psRoom.executeQuery()) {
+                    if (rsRoom.next()) {
+                        roomRateId = rsRoom.getInt("room_rate_id");
+                    }
+                }
+            }
+
+            if (roomRateId == 0) {
+                return false; // room type not found
+            }
+
+            // --- Insert reservation ---
+            try (PreparedStatement psIns = con.prepareStatement(insertSql)) {
+                psIns.setString(1, r.getReservationNumber());
+                psIns.setString(2, r.getGuestName());
+                psIns.setString(3, r.getAddress());
+                psIns.setString(4, r.getCustomerMobile());
+                psIns.setInt(5, roomRateId);
+                psIns.setDate(6, r.getCheckIn());
+                psIns.setDate(7, r.getCheckOut());
+                return psIns.executeUpdate() > 0;
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
-            return false; // duplicate customer_id/customer_mobile will come here
+            return false;
         }
-
-        return saved;
     }
 
     // 2) Get Reservation by reservation_number

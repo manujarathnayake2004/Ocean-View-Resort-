@@ -1,50 +1,27 @@
 package com.oceanview.filter;
 
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
+import javax.servlet.*;
 import javax.servlet.annotation.WebFilter;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import javax.servlet.http.*;
 import java.io.IOException;
 
-@WebFilter("/*")
+@WebFilter(urlPatterns = {"/dashboard.jsp"})
 public class AuthFilter implements Filter {
 
     @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
+    public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)
             throws IOException, ServletException {
 
-        HttpServletRequest req = (HttpServletRequest) request;
-        HttpServletResponse res = (HttpServletResponse) response;
+        HttpServletRequest request = (HttpServletRequest) req;
+        HttpServletResponse response = (HttpServletResponse) res;
 
-        String uri = req.getRequestURI();
-        String ctx = req.getContextPath();
+        HttpSession session = request.getSession(false);
 
-        boolean isPublic =
-                uri.equals(ctx + "/login.jsp") ||
-                        uri.equals(ctx + "/login") ||
-                        uri.equals(ctx + "/LoginServlet") ||
-                        uri.endsWith(".css") || uri.endsWith(".js") ||
-                        uri.endsWith(".png") || uri.endsWith(".jpg") || uri.endsWith(".jpeg") ||
-                        uri.endsWith(".woff") || uri.endsWith(".woff2");
-
-        if (isPublic) {
-            chain.doFilter(request, response);
+        if (session == null || session.getAttribute("loggedUser") == null) {
+            response.sendRedirect(request.getContextPath() + "/login.jsp");
             return;
         }
 
-        HttpSession session = req.getSession(false);
-        String user = (session == null) ? null : (String) session.getAttribute("loggedUser");
-
-        if (user == null) {
-            res.sendRedirect(ctx + "/login.jsp");
-            return;
-        }
-
-        chain.doFilter(request, response);
+        chain.doFilter(req, res);
     }
 }

@@ -6,13 +6,14 @@
 
 <%
   String reservationNumber = request.getParameter("reservationNumber");
+  if (reservationNumber != null) reservationNumber = reservationNumber.trim();
 
   Reservation reservation = null;
   long nights = 0;
   double ratePerDay = 15000; // You can change room rate here
   double total = 0;
 
-  if (reservationNumber != null && !reservationNumber.trim().isEmpty()) {
+  if (reservationNumber != null && !reservationNumber.isEmpty()) {
     ReservationDAO dao = new ReservationDAO();
     reservation = dao.getReservationByNumber(reservationNumber);
 
@@ -171,9 +172,19 @@
   </div>
 
   <% } else { %>
+  <% if(reservationNumber == null || reservationNumber.isEmpty()) { %>
+  <p style="color:#ffb4b4; background:rgba(255,0,0,.18); padding:12px 14px; border-radius:14px; border:1px solid rgba(255,0,0,.25);">
+    Reservation number missing. Please search using <b>Calculate &amp; Print Bill</b>.
+  </p>
+  <% } else { %>
+  <p style="color:#ffb4b4; background:rgba(255,0,0,.18); padding:12px 14px; border-radius:14px; border:1px solid rgba(255,0,0,.25);">
+    Reservation not found for number: <b><%= reservationNumber %></b>
+  </p>
+  <% } %>
 
-  <p style="color:red;">Reservation not found.</p>
-
+  <div style="margin-top:18px;">
+    <a href="javascript:history.back()" style="display:inline-block; padding:10px 16px; border-radius:18px; background:rgba(255,255,255,.35); text-decoration:none; color:#222; font-weight:600;">← Back</a>
+  </div>
   <% } %>
 
 </div>

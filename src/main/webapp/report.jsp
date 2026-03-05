@@ -125,7 +125,7 @@
         <h3 style="margin-top:18px;">Recent Payments</h3>
 
         <% if (payments == null || payments.size() == 0) { %>
-            <div class="empty">No payments found yet. Print a bill and click “Save Payment”.</div>
+        <div class="empty">No payments found yet. Print a bill and click “Save Payment”.</div>
         <% } else { %>
 
         <table>
