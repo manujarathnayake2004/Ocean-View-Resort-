@@ -1,66 +1,73 @@
 package com.oceanview.dao;
 
-import com.oceanview.model.User;
 import com.oceanview.util.DBConnection;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 
 public class UserDAO {
 
-    private boolean hasColumn(Connection con, String table, String column) throws SQLException {
-        DatabaseMetaData meta = con.getMetaData();
-        ResultSet rs = meta.getColumns(null, null, table, column);
-        boolean ok = rs.next();
-        rs.close();
-        return ok;
-    }
+    public LoginResult login(String username, String password) {
 
-    public User login(String username, String password) {
-        Connection con = null;
-        PreparedStatement ps = null;
-        ResultSet rs = null;
+        String sql =
+                "SELECT u.user_id, u.username, u.password, u.full_name, u.status, r.role_name " +
+                        "FROM users u " +
+                        "JOIN roles r ON u.role_id = r.role_id " +
+                        "WHERE u.username = ? LIMIT 1";
 
-        try {
-            con = DBConnection.getConnection();
+        try (Connection con = DBConnection.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
 
-            boolean hasStatus = hasColumn(con, "users", "status");
+            ps.setString(1, username);
 
-            String sql;
-            if (hasStatus) {
-                sql = "SELECT u.user_id, u.role_id, r.role_name, u.username, u.full_name, u.status " +
-                        "FROM users u INNER JOIN roles r ON u.role_id = r.role_id " +
-                        "WHERE u.username=? AND u.password=? AND u.status='ACTIVE'";
-            } else {
-                sql = "SELECT u.user_id, u.role_id, r.role_name, u.username, u.full_name, 'ACTIVE' AS status " +
-                        "FROM users u INNER JOIN roles r ON u.role_id = r.role_id " +
-                        "WHERE u.username=? AND u.password=?";
-            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
 
-            ps = con.prepareStatement(sql);
-            ps.setString(1, username == null ? "" : username.trim());
-            ps.setString(2, password == null ? "" : password.trim());
+                    String dbPass = rs.getString("password");
+                    String status = rs.getString("status");
+                    String roleName = rs.getString("role_name");
+                    String fullName = rs.getString("full_name");
 
-            rs = ps.executeQuery();
+                    // status must be ACTIVE
+                    if (status == null || !status.equalsIgnoreCase("ACTIVE")) {
+                        return new LoginResult(false, "Your account is not ACTIVE.", null, null);
+                    }
 
-            if (rs.next()) {
-                User user = new User();
-                user.setUserId(rs.getInt("user_id"));
-                user.setRoleId(rs.getInt("role_id"));
-                user.setRoleName(rs.getString("role_name"));   // IMPORTANT
-                user.setUsername(rs.getString("username"));
-                user.setFullName(rs.getString("full_name"));
-                user.setStatus(rs.getString("status"));
-                return user;
+                    // plain password check (as you requested, no password_hash)
+                    if (dbPass != null && dbPass.equals(password)) {
+                        return new LoginResult(true, "Login success", roleName, fullName);
+                    } else {
+                        return new LoginResult(false, "Invalid username or password.", null, null);
+                    }
+                }
             }
 
         } catch (Exception e) {
             e.printStackTrace();
-        } finally {
-            try { if (rs != null) rs.close(); } catch (Exception ignored) {}
-            try { if (ps != null) ps.close(); } catch (Exception ignored) {}
-            try { if (con != null) con.close(); } catch (Exception ignored) {}
+            return new LoginResult(false, "Database error. Check console.", null, null);
         }
 
-        return null;
+        return new LoginResult(false, "Invalid username or password.", null, null);
+    }
+
+    // Simple result object (inner class)
+    public static class LoginResult {
+        private boolean success;
+        private String message;
+        private String role;
+        private String fullName;
+
+        public LoginResult(boolean success, String message, String role, String fullName) {
+            this.success = success;
+            this.message = message;
+            this.role = role;
+            this.fullName = fullName;
+        }
+
+        public boolean isSuccess() { return success; }
+        public String getMessage() { return message; }
+        public String getRole() { return role; }
+        public String getFullName() { return fullName; }
     }
 }

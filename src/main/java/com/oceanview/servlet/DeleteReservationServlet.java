@@ -2,26 +2,29 @@ package com.oceanview.servlet;
 
 import com.oceanview.dao.ReservationDAO;
 
+import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.*;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 @WebServlet("/deleteReservation")
 public class DeleteReservationServlet extends HttpServlet {
 
-    private ReservationDAO reservationDAO = new ReservationDAO();
-
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
 
-        String reservationNumber = req.getParameter("reservationNumber");
+        String reservationNumber = request.getParameter("reservationNumber");
 
-        boolean deleted = reservationDAO.deleteByReservationNumber(reservationNumber);
+        ReservationDAO dao = new ReservationDAO();
+        boolean deleted = dao.deleteByReservationNumber(reservationNumber);
 
         if (deleted) {
-            resp.sendRedirect("listReservations?msg=Deleted+successfully");
+            response.sendRedirect("listReservations?msg=Deleted+successfully");
         } else {
-            resp.sendRedirect("listReservations?msg=Delete+failed");
+            response.sendRedirect("listReservations?msg=Delete+failed");
         }
     }
 }

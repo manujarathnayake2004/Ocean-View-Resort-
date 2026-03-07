@@ -262,13 +262,13 @@
             <div class="card">
                 <h3>🔎 Search Reservation</h3>
                 <p>Find a booking using the reservation number (fast lookup).</p>
-                <a class="btn" href="searchReservation.jsp">Open →</a>
+                <a class="btn" href="receptionistSearchReservation.jsp">Open →</a>
             </div>
 
             <div class="card">
                 <h3>🧾 Calculate & Print Bill</h3>
                 <p>Generate the bill from reservation number and print invoice.</p>
-                <a class="btn" href="billPrint.jsp">Open →</a>
+                <a class="btn" href="calculateBill.jsp">Open →</a>
             </div>
 
         </div>

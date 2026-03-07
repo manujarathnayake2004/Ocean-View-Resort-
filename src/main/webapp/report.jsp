@@ -1,7 +1,7 @@
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="java.util.List" %>
 <%@ page import="com.oceanview.dao.PaymentDAO" %>
 <%@ page import="com.oceanview.model.Payment" %>
-<%@ page import="java.util.List" %>
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 
 <%
     String user = (String) session.getAttribute("loggedUser");
@@ -11,15 +11,18 @@
         response.sendRedirect("login.jsp?msg=Please+login+first");
         return;
     }
-    if (role == null || !("MANAGER".equalsIgnoreCase(role) || "ADMIN".equalsIgnoreCase(role))) {
-        response.sendRedirect("login.jsp?err=Access+Denied");
+    if (role == null || !role.equalsIgnoreCase("MANAGER")) {
+        response.sendRedirect("login.jsp?msg=Access+Denied");
         return;
     }
 
     PaymentDAO dao = new PaymentDAO();
-    double revenue = dao.getTotalRevenue();
-    int count = dao.getPaymentCount();
+
+    int paymentCount = dao.getPaymentCount();
+    double totalRevenue = dao.getTotalRevenue();
+
     List<Payment> payments = dao.getAllPayments();
+    int maxRows = 8;
 %>
 
 <!DOCTYPE html>
@@ -27,132 +30,183 @@
 <head>
     <meta charset="UTF-8">
     <title>Manager Report | Ocean View Resort</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <style>
+        :root{
+            --p1:#7C3AED;
+            --p2:#C4B5FD;
+            --glass:rgba(255,255,255,0.14);
+            --border:rgba(255,255,255,0.22);
+        }
+        *{box-sizing:border-box;}
         body{
             margin:0;
-            font-family: "Segoe UI", Arial, sans-serif;
+            font-family:"Segoe UI", Arial, sans-serif;
             min-height:100vh;
+            color:#fff;
             background:
-                    radial-gradient(1200px 700px at 15% 10%, rgba(167,139,250,0.35), transparent 55%),
-                    radial-gradient(900px 600px at 85% 20%, rgba(109,40,217,0.30), transparent 55%),
-                    linear-gradient(120deg, rgba(8,6,20,0.72), rgba(8,6,20,0.35)),
+                    linear-gradient(rgba(40,0,90,0.55), rgba(120,0,180,0.45)),
                     url("images/resort-bg.jpg") center/cover no-repeat fixed;
-            color: rgba(255,255,255,0.92);
         }
-
-        .wrap{
-            max-width: 1100px;
-            margin: 40px auto;
-            padding: 18px;
-        }
-
-        .card{
-            background: rgba(255,255,255,0.12);
-            border: 1px solid rgba(255,255,255,0.22);
-            border-radius: 22px;
-            padding: 18px;
-            backdrop-filter: blur(14px);
-            box-shadow: 0 18px 70px rgba(0,0,0,0.55);
-        }
-
-        .top{
+        .overlay{
+            min-height:100vh;
+            padding:60px 18px;
+            background:rgba(0,0,0,0.25);
             display:flex;
-            align-items:center;
+            justify-content:center;
+            align-items:flex-start;
+        }
+        .card{
+            width:min(1200px,100%);
+            background:var(--glass);
+            border:1px solid var(--border);
+            border-radius:26px;
+            backdrop-filter:blur(14px);
+            -webkit-backdrop-filter:blur(14px);
+            box-shadow:0 25px 70px rgba(0,0,0,0.45);
+            padding:28px;
+        }
+        .topbar{
+            display:flex;
             justify-content:space-between;
-            gap: 12px;
+            align-items:center;
+            gap:10px;
             flex-wrap:wrap;
         }
-
-        h1{ margin: 0; font-size: 30px; }
-        .muted{ color: rgba(255,255,255,0.74); margin-top: 6px; }
-
-        .stats{ display:flex; gap:12px; flex-wrap:wrap; margin-top: 12px; }
-        .stat{
-            padding: 12px 14px;
-            border-radius: 18px;
-            background: rgba(255,255,255,0.10);
-            border: 1px solid rgba(255,255,255,0.18);
-            min-width: 200px;
+        .title{
+            margin:0;
+            font-size:30px;
+            letter-spacing:0.6px;
+            font-weight:900;
         }
-
-        table{ width:100%; border-collapse: collapse; margin-top: 16px; overflow:hidden; }
-        th, td{ padding: 10px; text-align:left; border-bottom: 1px solid rgba(255,255,255,0.15); }
-        th{ color: rgba(255,255,255,0.88); }
-        td{ color: rgba(255,255,255,0.80); }
-
-        a.btn{
+        .subtitle{
+            margin:6px 0 0;
+            opacity:0.85;
+            font-size:13px;
+        }
+        .btns{ display:flex; gap:10px; }
+        .btn{
+            padding:10px 14px;
+            border-radius:14px;
+            border:1px solid rgba(255,255,255,0.22);
+            background:rgba(0,0,0,0.28);
+            color:#fff;
             text-decoration:none;
-            padding: 10px 16px;
-            border-radius: 14px;
-            border: 1px solid rgba(255,255,255,0.22);
-            background: rgba(255,255,255,0.10);
-            color: rgba(255,255,255,0.92);
-            font-weight: 800;
+            font-weight:800;
+            font-size:13px;
         }
-        a.btn:hover{ background: rgba(255,255,255,0.14); }
-
-        .empty{ padding: 12px; color: rgba(255,255,255,0.74); }
+        .btn.primary{
+            background:linear-gradient(135deg,var(--p1),var(--p2));
+            border:none;
+        }
+        .stats{
+            display:grid;
+            grid-template-columns: 1fr 1fr;
+            gap:14px;
+            margin-top:18px;
+        }
+        .stat{
+            background:rgba(0,0,0,0.28);
+            border:1px solid rgba(255,255,255,0.16);
+            border-radius:18px;
+            padding:16px;
+        }
+        .stat small{ opacity:0.8; font-weight:700; }
+        .stat .value{ margin-top:6px; font-size:26px; font-weight:900; }
+        h3{ margin:22px 0 10px; font-size:18px; }
+        table{
+            width:100%;
+            border-collapse:collapse;
+            border-radius:16px;
+            overflow:hidden;
+        }
+        th{
+            background:rgba(255,255,255,0.18);
+            padding:12px;
+            font-size:13px;
+            text-align:left;
+            white-space:nowrap;
+        }
+        td{
+            background:rgba(0,0,0,0.22);
+            padding:12px;
+            font-size:13px;
+        }
+        tr:hover td{ background:rgba(0,0,0,0.30); }
+        .footer{ margin-top:16px; text-align:center; font-size:12px; opacity:0.75; }
+        @media(max-width:700px){ .stats{ grid-template-columns:1fr; } }
     </style>
 </head>
-<body>
 
-<div class="wrap">
+<body>
+<div class="overlay">
     <div class="card">
-        <div class="top">
+
+        <div class="topbar">
             <div>
-                <h1>Manager Report</h1>
-                <div class="muted">Welcome, <b><%= user %></b> | Role: <b><%= role %></b></div>
+                <div class="title">Manager Report</div>
+                <div class="subtitle">Welcome, <b><%= user %></b> | Role: <b><%= role %></b></div>
             </div>
-            <div style="display:flex; gap:10px;">
-                <a class="btn" href="managerDashboard.jsp">⬅ Back</a>
-                <a class="btn" href="logout">🚪 Logout</a>
+
+            <div class="btns">
+                <a class="btn" href="managerDashboard.jsp">← Back</a>
+                <a class="btn primary" href="LogoutServlet">Logout</a>
             </div>
         </div>
 
         <div class="stats">
             <div class="stat">
-                <div style="font-weight:900; font-size:12px; color:rgba(255,255,255,0.75);">Total Payments</div>
-                <div style="font-size:22px; font-weight:900;"><%= count %></div>
+                <small>Total Payments</small>
+                <div class="value"><%= paymentCount %></div>
             </div>
             <div class="stat">
-                <div style="font-weight:900; font-size:12px; color:rgba(255,255,255,0.75);">Total Revenue (LKR)</div>
-                <div style="font-size:22px; font-weight:900;"><%= revenue %></div>
+                <small>Total Revenue (LKR)</small>
+                <div class="value"><%= String.format("%.2f", totalRevenue) %></div>
             </div>
         </div>
 
-        <h3 style="margin-top:18px;">Recent Payments</h3>
-
-        <% if (payments == null || payments.size() == 0) { %>
-        <div class="empty">No payments found yet. Print a bill and click “Save Payment”.</div>
-        <% } else { %>
+        <h3>Recent Payments</h3>
 
         <table>
             <tr>
-                <th>ID</th>
+                <th>Payment ID</th>
                 <th>Reservation No</th>
                 <th>Nights</th>
-                <th>Rate/Day</th>
+                <th>Rate / Night</th>
+                <th>Subtotal</th>
                 <th>Total</th>
-                <th>Date</th>
+                <th>Paid At</th>
             </tr>
-            <% for (Payment p : payments) { %>
+
+            <%
+                if (payments != null && !payments.isEmpty()) {
+                    int c = 0;
+                    for (Payment p : payments) {
+                        if (c++ >= maxRows) break;
+            %>
             <tr>
                 <td><%= p.getPaymentId() %></td>
                 <td><%= p.getReservationNumber() %></td>
                 <td><%= p.getNights() %></td>
-                <td><%= p.getRatePerDay() %></td>
-                <td><%= p.getTotal() %></td>
-                <td><%= p.getPaymentDate() %></td>
+                <td><%= String.format("%.2f", p.getRatePerDay()) %></td>
+                <td><%= String.format("%.2f", p.getSubtotal()) %></td>
+                <td><%= String.format("%.2f", p.getTotal()) %></td>
+                <td><%= p.getPaymentDate() != null ? p.getPaymentDate() : "-" %></td>
+            </tr>
+            <%
+                }
+            } else {
+            %>
+            <tr>
+                <td colspan="7">No payments found yet. Print a bill and click “Save Payment”.</td>
             </tr>
             <% } %>
         </table>
 
-        <% } %>
+        <div class="footer">© <%= java.time.Year.now() %> Ocean View Resort</div>
 
     </div>
 </div>
-
 </body>
 </html>

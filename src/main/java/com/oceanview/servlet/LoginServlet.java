@@ -1,19 +1,18 @@
 package com.oceanview.servlet;
 
 import com.oceanview.dao.UserDAO;
-import com.oceanview.model.User;
+import com.oceanview.dao.UserDAO.LoginResult;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.*;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 
-@WebServlet("/login")
+@WebServlet("/LoginServlet")
 public class LoginServlet extends HttpServlet {
-
-    private final UserDAO userDAO = new UserDAO();
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -22,51 +21,36 @@ public class LoginServlet extends HttpServlet {
         String username = request.getParameter("username");
         String password = request.getParameter("password");
 
-        if (username != null) username = username.trim();
-        if (password != null) password = password.trim();
-
-        if (username == null || username.isEmpty() || password == null || password.isEmpty()) {
-            String err = URLEncoder.encode("Please enter username and password", StandardCharsets.UTF_8);
-            response.sendRedirect(request.getContextPath() + "/login.jsp?err=" + err);
+        if (username == null || username.trim().isEmpty() ||
+                password == null || password.trim().isEmpty()) {
+            response.sendRedirect("login.jsp?msg=Please+enter+username+and+password");
             return;
         }
 
-        User user = userDAO.login(username, password);
+        UserDAO dao = new UserDAO();
+        LoginResult result = dao.login(username.trim(), password.trim());
 
-        if (user != null) {
+        if (result.isSuccess()) {
             HttpSession session = request.getSession(true);
+            session.setAttribute("loggedUser", username.trim());
+            session.setAttribute("loggedRole", result.getRole());
+            session.setAttribute("loggedName", result.getFullName());
 
-            // ✅ IMPORTANT: your JSP pages expect STRINGS
-            session.setAttribute("loggedUser", user.getUsername());
-            session.setAttribute("loggedRole", user.getRoleName());
+            // Redirect based on role
+            String role = result.getRole();
 
-            // Optional
-            session.setAttribute("roleId", user.getRoleId());
-            session.setAttribute("userId", user.getUserId());
-
-            session.setMaxInactiveInterval(30 * 60);
-
-            String role = user.getRoleName();
-
-            // ✅ Redirect to files that EXIST in your project
-            if (role != null && role.equalsIgnoreCase("RECEPTIONIST")) {
-                response.sendRedirect(request.getContextPath() + "/receptionistDashboard.jsp");
+            if (role != null && role.equalsIgnoreCase("ADMIN")) {
+                response.sendRedirect("dashboard.jsp");
             } else if (role != null && role.equalsIgnoreCase("MANAGER")) {
-                response.sendRedirect(request.getContextPath() + "/managerDashboard.jsp");
+                response.sendRedirect("managerDashboard.jsp");
+            } else if (role != null && role.equalsIgnoreCase("RECEPTIONIST")) {
+                response.sendRedirect("receptionistDashboard.jsp");
             } else {
-                // ADMIN default
-                response.sendRedirect(request.getContextPath() + "/dashboard.jsp");
+                response.sendRedirect("dashboard.jsp");
             }
 
         } else {
-            String err = URLEncoder.encode("Invalid Username or Password", StandardCharsets.UTF_8);
-            response.sendRedirect(request.getContextPath() + "/login.jsp?err=" + err);
+            response.sendRedirect("login.jsp?msg=" + result.getMessage().replace(" ", "+"));
         }
-    }
-
-    @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws IOException {
-        response.sendRedirect(request.getContextPath() + "/login.jsp");
     }
 }

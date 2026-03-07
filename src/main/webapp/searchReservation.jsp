@@ -1,4 +1,5 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="com.oceanview.dao.ReservationDAO" %>
 <%@ page import="com.oceanview.model.Reservation" %>
 
 <%
@@ -8,192 +9,102 @@
         return;
     }
 
-    Reservation r = (Reservation) request.getAttribute("reservation");
+    String reservationNumber = request.getParameter("reservationNumber");
+    Reservation r = null;
+    boolean searched = false;
+
+    if (reservationNumber != null && !reservationNumber.trim().isEmpty()) {
+        searched = true;
+        ReservationDAO dao = new ReservationDAO();
+        r = dao.getReservationByNumber(reservationNumber.trim());
+    }
 %>
 
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Search Reservation | Ocean View Resort</title>
+    <title>Search Reservation</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <style>
-        :root{
-            --p1:#6D28D9;
-            --p2:#A78BFA;
-            --w:#FFFFFF;
-            --text:rgba(255,255,255,0.92);
-            --muted:rgba(255,255,255,0.74);
-            --glass:rgba(255,255,255,0.12);
-            --glass2:rgba(255,255,255,0.08);
-            --border:rgba(255,255,255,0.22);
-            --shadow: 0 18px 70px rgba(0,0,0,0.55);
-        }
-
-        *{box-sizing:border-box;}
-
         body{
-            margin:0;
-            font-family:"Segoe UI", Arial, sans-serif;
-            min-height:100vh;
-            color:var(--text);
-
-            /* SAME BRIGHT BACKGROUND AS INDEX */
-            background:
-                    radial-gradient(1200px 700px at 15% 10%, rgba(196,181,253,0.55), transparent 55%),
-                    radial-gradient(900px 600px at 85% 20%, rgba(167,139,250,0.45), transparent 55%),
-                    linear-gradient(120deg, rgba(255,255,255,0.60), rgba(255,255,255,0.30)),
-                    url("images/resort-bg.jpg") center/cover no-repeat fixed;
+            margin:0; font-family:Segoe UI, Arial;
+            min-height:100vh; color:#fff;
+            background: url("images/resort-bg.jpg") center/cover no-repeat fixed;
         }
-
-        .page{
+        .wrap{
             min-height:100vh;
             display:flex;
+            justify-content:center;
             align-items:center;
-            justify-content:center;
-            padding:40px 16px;
-        }
-
-        .glass{
-            width:min(800px,100%);
-            background: linear-gradient(180deg,var(--glass),var(--glass2));
-            border:1px solid var(--border);
-            border-radius:22px;
-            box-shadow:var(--shadow);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
             padding:30px;
+            background:rgba(0,0,0,0.35);
         }
-
-        h2{
-            text-align:center;
-            margin-bottom:25px;
-            font-size:22px;
+        .card{
+            width:min(800px, 100%);
+            background:rgba(255,255,255,0.12);
+            border:1px solid rgba(255,255,255,0.25);
+            border-radius:22px;
+            backdrop-filter: blur(12px);
+            padding:26px;
         }
-
-        form{
-            display:flex;
-            gap:10px;
-            flex-wrap:wrap;
-            justify-content:center;
-            margin-bottom:20px;
+        h2{ text-align:center; margin:0 0 20px; }
+        form{ display:flex; justify-content:center; gap:10px; flex-wrap:wrap; }
+        input{
+            padding:12px; border-radius:12px; border:none;
+            width:260px; outline:none;
         }
-
-        input[type=text]{
-            padding:12px;
-            border-radius:12px;
-            border:1px solid rgba(255,255,255,0.3);
-            background:rgba(255,255,255,0.15);
-            color:#fff;
-            width:250px;
-            outline:none;
-        }
-
-        input::placeholder{
-            color:rgba(255,255,255,0.6);
-        }
-
         button{
-            padding:12px 20px;
-            border-radius:14px;
-            border:none;
-            font-weight:bold;
-            background:linear-gradient(135deg,var(--p1),var(--p2));
-            color:white;
-            cursor:pointer;
-            box-shadow:0 14px 34px rgba(109,40,217,0.35);
+            padding:12px 18px; border-radius:12px; border:none;
+            background:#6D28D9; color:#fff; font-weight:700; cursor:pointer;
         }
-
-        button:hover{
-            filter:brightness(1.08);
-        }
-
-        .result{
-            margin-top:20px;
-            border-radius:16px;
-            border:1px solid rgba(255,255,255,0.2);
-            background:rgba(255,255,255,0.08);
-            padding:20px;
-        }
-
-        .row{
-            margin-bottom:12px;
-        }
-
-        .label{
-            font-size:12px;
-            color:var(--muted);
-        }
-
-        .value{
-            font-weight:bold;
-            font-size:14px;
-        }
-
-        .footer{
-            margin-top:20px;
+        .msg{
+            margin-top:16px;
+            padding:12px; border-radius:12px;
+            background:rgba(255,0,0,0.15);
+            border:1px solid rgba(255,0,0,0.35);
             text-align:center;
-            font-size:12px;
-            color:rgba(255,255,255,0.6);
         }
+        .result{
+            margin-top:18px;
+            padding:18px; border-radius:14px;
+            background:rgba(255,255,255,0.08);
+            border:1px solid rgba(255,255,255,0.2);
+        }
+        .row{ margin-bottom:10px; }
+        .label{ opacity:0.75; font-size:12px; }
+        .val{ font-weight:700; }
+        a{ color:#fff; display:inline-block; margin-top:16px; text-decoration:none; font-weight:700; }
     </style>
 </head>
-
 <body>
-<div class="page">
-    <div class="glass">
-
+<div class="wrap">
+    <div class="card">
         <h2>🔎 Search Reservation</h2>
 
-        <form action="<%=request.getContextPath()%>/searchReservation" method="get">
-            <input type="text" name="reservationNumber" placeholder="Enter Reservation Number" required>
+        <form action="searchReservation.jsp" method="get">
+            <input type="text" name="reservationNumber" placeholder="Enter Reservation Number"
+                   value="<%= reservationNumber != null ? reservationNumber : "" %>" required>
             <button type="submit">Search</button>
         </form>
 
-        <% if(r != null){ %>
+        <% if (searched && r == null) { %>
+        <div class="msg">Reservation not found: <b><%= reservationNumber %></b></div>
+        <% } %>
+
+        <% if (r != null) { %>
         <div class="result">
-            <div class="row">
-                <div class="label">Reservation Number</div>
-                <div class="value"><%= r.getReservationNumber() %></div>
-            </div>
-
-            <div class="row">
-                <div class="label">Customer ID</div>
-                <div class="value"><%= r.getCustomerId() %></div>
-            </div>
-
-            <div class="row">
-                <div class="label">Customer Mobile</div>
-                <div class="value"><%= r.getCustomerMobile() %></div>
-            </div>
-
-            <div class="row">
-                <div class="label">Guest Name</div>
-                <div class="value"><%= r.getGuestName() %></div>
-            </div>
-
-            <div class="row">
-                <div class="label">Room Type</div>
-                <div class="value"><%= r.getRoomType() %></div>
-            </div>
-
-            <div class="row">
-                <div class="label">Check-In</div>
-                <div class="value"><%= r.getCheckIn() %></div>
-            </div>
-
-            <div class="row">
-                <div class="label">Check-Out</div>
-                <div class="value"><%= r.getCheckOut() %></div>
-            </div>
+            <div class="row"><div class="label">Reservation No</div><div class="val"><%= r.getReservationNumber() %></div></div>
+            <div class="row"><div class="label">Mobile</div><div class="val"><%= r.getCustomerMobile() %></div></div>
+            <div class="row"><div class="label">Guest Name</div><div class="val"><%= r.getGuestName() %></div></div>
+            <div class="row"><div class="label">Address</div><div class="val"><%= r.getAddress() %></div></div>
+            <div class="row"><div class="label">Room Type</div><div class="val"><%= r.getRoomType() %></div></div>
+            <div class="row"><div class="label">Check-In</div><div class="val"><%= r.getCheckIn() %></div></div>
+            <div class="row"><div class="label">Check-Out</div><div class="val"><%= r.getCheckOut() %></div></div>
         </div>
         <% } %>
 
-        <div class="footer">
-            © <%= java.time.Year.now() %> Ocean View Resort
-        </div>
-
+        <a href="dashboard.jsp">← Back to Dashboard</a>
     </div>
 </div>
 </body>

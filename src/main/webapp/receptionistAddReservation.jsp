@@ -11,6 +11,9 @@
     response.sendRedirect("login.jsp?msg=Access+Denied");
     return;
   }
+
+  String msg = request.getParameter("msg");
+  if (msg == null) msg = "";
 %>
 <!DOCTYPE html>
 <html>
@@ -44,7 +47,7 @@
       padding:60px 20px;
     }
     .glass-container{
-      width:min(980px, 100%);
+      width:min(1100px, 100%);
       background:var(--glass);
       backdrop-filter:blur(14px);
       -webkit-backdrop-filter:blur(14px);
@@ -60,7 +63,7 @@
       gap:10px;
       margin-bottom:18px;
     }
-    h2{margin:0;font-size:26px;letter-spacing:0.6px;}
+    h2{margin:0;font-size:28px;letter-spacing:0.6px;}
     .pill{
       font-size:12px;
       padding:8px 12px;
@@ -94,10 +97,11 @@
       border:none;
       border-radius:14px;
       outline:none;
-      background:rgba(255,255,255,0.88);
-      color:#333;
-      font-weight:600;
+      background:rgba(0,0,0,0.35);
+      color:#fff;
+      font-weight:700;
     }
+    input::placeholder{ color:rgba(255,255,255,0.6); }
     .full{ grid-column: 1 / span 2; }
 
     .btn-row{
@@ -150,26 +154,23 @@
       <div class="pill">Logged in: <b><%= user %></b> (RECEPTIONIST)</div>
     </div>
 
-    <%
-      String msg = request.getParameter("msg");
-      if (msg != null) {
-    %>
+    <% if (!msg.trim().isEmpty()) { %>
     <div class="msg"><%= msg %></div>
     <% } %>
 
-    <!-- IMPORTANT:
-         Change only the action URL if your servlet mapping is different.
-         This is designed to work with your existing add reservation servlet. -->
-    <form method="post" action="<%=request.getContextPath()%>/receptionistAddReservation.jsp">
+    <form method="post" action="<%=request.getContextPath()%>/addReservation">
+
+      <!-- ✅ IMPORTANT: tells servlet to redirect back to receptionist page -->
+      <input type="hidden" name="returnPage" value="receptionistAddReservation.jsp">
 
       <div>
         <label>Reservation Number</label>
-        <input type="text" name="reservationNumber" placeholder="ex: R001" required>
+        <input type="text" name="reservationNumber" placeholder="ex: OV001" required>
       </div>
 
       <div>
-        <label>Customer ID</label>
-        <input type="text" name="customerId" placeholder="ex: C001" required>
+        <label>Customer ID (Optional)</label>
+        <input type="text" name="customerId" placeholder="ex: C001">
       </div>
 
       <div>
@@ -198,8 +199,8 @@
       </div>
 
       <div>
-        <label>Room Count</label>
-        <input type="number" name="roomCount" min="1" value="1" required>
+        <label>Room Count (Optional)</label>
+        <input type="number" name="roomCount" min="1" value="1">
       </div>
 
       <div>

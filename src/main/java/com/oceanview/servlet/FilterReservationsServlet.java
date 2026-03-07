@@ -3,8 +3,11 @@ package com.oceanview.servlet;
 import com.oceanview.dao.ReservationDAO;
 import com.oceanview.model.Reservation;
 
+import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.*;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.Date;
 import java.util.List;
@@ -12,41 +15,26 @@ import java.util.List;
 @WebServlet("/filterReservations")
 public class FilterReservationsServlet extends HttpServlet {
 
-    private ReservationDAO reservationDAO = new ReservationDAO();
-
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
 
-        String roomType = req.getParameter("roomType");
-        String from = req.getParameter("fromDate");
-        String to = req.getParameter("toDate");
+        String roomType = request.getParameter("roomType");
+        String fromStr = request.getParameter("fromDate");
+        String toStr = request.getParameter("toDate");
 
         Date fromDate = null;
         Date toDate = null;
 
-        if (from != null && !from.trim().isEmpty()) {
-            fromDate = Date.valueOf(from);
-        }
+        try {
+            if (fromStr != null && !fromStr.trim().isEmpty()) fromDate = Date.valueOf(fromStr);
+            if (toStr != null && !toStr.trim().isEmpty()) toDate = Date.valueOf(toStr);
+        } catch (Exception ignored) { }
 
-        if (to != null && !to.trim().isEmpty()) {
-            toDate = Date.valueOf(to);
-        }
+        ReservationDAO dao = new ReservationDAO();
+        List<Reservation> list = dao.filterReservations(roomType, fromDate, toDate);
 
-        // If roomType is "All" treat as empty
-        if (roomType != null && roomType.equals("All")) {
-            roomType = "";
-        }
-
-        List<Reservation> list = reservationDAO.filterReservations(roomType, fromDate, toDate);
-
-        HttpSession session = req.getSession();
-        session.setAttribute("reservationList", list);
-
-        // Keep filter values so JSP can show them
-        session.setAttribute("filterRoomType", roomType);
-        session.setAttribute("filterFrom", from);
-        session.setAttribute("filterTo", to);
-
-        resp.sendRedirect("listReservations.jsp");
+        request.getSession().setAttribute("reservationList", list);
+        response.sendRedirect(request.getContextPath() + "/listReservations.jsp");
     }
 }

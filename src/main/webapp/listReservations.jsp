@@ -1,211 +1,201 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
 <%@ page import="com.oceanview.model.Reservation" %>
+<%@ page import="com.oceanview.dao.ReservationDAO" %>
 
 <%
+  // ✅ Login check
   String user = (String) session.getAttribute("loggedUser");
   if (user == null) {
     response.sendRedirect("login.jsp?msg=Please+login+first");
     return;
   }
 
+  // ✅ Get list from session (servlet sets this)
   List<Reservation> list = (List<Reservation>) session.getAttribute("reservationList");
 
-  String filterRoomType = (String) session.getAttribute("filterRoomType");
-  String filterFrom = (String) session.getAttribute("filterFrom");
-  String filterTo = (String) session.getAttribute("filterTo");
+  // ✅ If user opened JSP directly, load from DB
+  if (list == null) {
+    ReservationDAO dao = new ReservationDAO();
+    list = dao.getAllReservations();
+    session.setAttribute("reservationList", list);
+  }
 
-  if (filterRoomType == null) filterRoomType = "";
-  if (filterFrom == null) filterFrom = "";
-  if (filterTo == null) filterTo = "";
+  // Keep UI filter values (optional)
+  String roomTypeVal = request.getParameter("roomType");
+  if (roomTypeVal == null || roomTypeVal.trim().isEmpty()) roomTypeVal = "All";
+
+  String fromDateVal = request.getParameter("fromDate");
+  String toDateVal = request.getParameter("toDate");
 %>
 
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Ocean View Resort | Reservations</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>All Reservations</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
-    :root{
-      --p1:#7C3AED;
-      --p2:#C4B5FD;
-      --white:#ffffff;
-      --glass:rgba(255,255,255,0.18);
-      --border:rgba(255,255,255,0.35);
-    }
-
-    *{box-sizing:border-box;}
-
     body{
       margin:0;
       font-family:"Segoe UI", Arial, sans-serif;
       min-height:100vh;
-      color:white;
-
-      /* SAME BRIGHT BACKGROUND LIKE INDEX */
-      background:
-              linear-gradient(rgba(80,0,140,0.55), rgba(120,0,180,0.55)),
-              url("images/resort-bg.jpg") center/cover no-repeat fixed;
+      color:#fff;
+      background: url("images/resort-bg.jpg") center/cover no-repeat fixed;
     }
 
-    .page{
+    .overlay{
       min-height:100vh;
       display:flex;
       justify-content:center;
       align-items:flex-start;
       padding:60px 20px;
+      background:rgba(0,0,0,0.35);
     }
 
-    .glass-container{
-      width:min(1200px, 100%);
-      background:var(--glass);
+    .glass{
+      width:min(1300px,100%);
+      background:rgba(255,255,255,0.12);
+      border:1px solid rgba(255,255,255,0.22);
+      border-radius:28px;
       backdrop-filter:blur(14px);
       -webkit-backdrop-filter:blur(14px);
-      border-radius:25px;
-      border:1px solid var(--border);
-      box-shadow:0 25px 70px rgba(0,0,0,0.35);
-      padding:35px;
+      box-shadow:0 25px 70px rgba(0,0,0,0.40);
+      padding:28px;
     }
 
-    h2{
+    h1{
       text-align:center;
-      margin:0 0 25px;
-      font-size:28px;
-      letter-spacing:1px;
+      margin:0 0 20px;
+      font-size:32px;
+      letter-spacing:0.7px;
     }
 
-    .filter-box{
-      text-align:center;
-      margin-bottom:25px;
+    .filters{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      justify-content:center;
+      align-items:center;
+      margin-bottom:18px;
     }
 
-    select,input,button,a.clear{
+    select, input[type="date"]{
       padding:10px 14px;
-      border-radius:12px;
+      border-radius:14px;
       border:none;
-      margin:5px;
-      font-weight:600;
+      outline:none;
+      background:rgba(0,0,0,0.35);
+      color:#fff;
+      font-weight:700;
     }
 
-    select,input{
-      background:rgba(255,255,255,0.85);
-      color:#333;
-    }
+    select option{ color:#000; }
 
-    button{
-      background:linear-gradient(135deg,var(--p1),var(--p2));
-      color:white;
+    .btn{
+      padding:10px 16px;
+      border-radius:14px;
+      border:none;
       cursor:pointer;
+      font-weight:800;
+      background:linear-gradient(135deg,#7C3AED,#C4B5FD);
+      color:#fff;
     }
 
-    button:hover{
-      transform:translateY(-2px);
-    }
-
-    a.clear{
-      background:white;
-      color:#6D28D9;
+    .btn-clear{
+      padding:10px 16px;
+      border-radius:14px;
+      border:1px solid rgba(255,255,255,0.25);
+      cursor:pointer;
+      font-weight:800;
+      background:rgba(0,0,0,0.35);
+      color:#C4B5FD;
       text-decoration:none;
+      display:inline-block;
     }
 
     table{
       width:100%;
       border-collapse:collapse;
-      border-radius:15px;
+      border-radius:18px;
       overflow:hidden;
     }
 
     th{
-      background:rgba(255,255,255,0.25);
+      background:rgba(255,255,255,0.22);
       padding:14px;
       text-align:left;
-      font-size:14px;
+      font-size:13px;
+      white-space:nowrap;
     }
 
     td{
-      background:rgba(255,255,255,0.15);
-      padding:12px;
+      background:rgba(255,255,255,0.10);
+      padding:13px;
       font-size:13px;
     }
 
-    tr:hover td{
-      background:rgba(255,255,255,0.25);
-    }
+    tr:hover td{ background:rgba(255,255,255,0.18); }
 
-    .btn{
-      padding:7px 12px;
-      border-radius:8px;
+    .action a{
+      display:inline-block;
+      padding:8px 12px;
+      border-radius:12px;
+      background:rgba(124,58,237,0.55);
+      color:#fff;
       text-decoration:none;
+      font-weight:800;
       font-size:12px;
-      font-weight:700;
-      margin-right:5px;
+      white-space:nowrap;
     }
 
-    .edit{
-      background:white;
-      color:#7C3AED;
-    }
+    .action a:hover{ filter:brightness(1.1); }
 
-    .delete{
-      background:#ff4d6d;
-      color:white;
-    }
-
-    .bill{
-      background:linear-gradient(135deg,#7C3AED,#C4B5FD);
-      color:white;
-    }
-
-    .footer{
+    .center{
       text-align:center;
-      margin-top:30px;
-      font-size:13px;
-      opacity:0.8;
+      margin-top:18px;
     }
 
     .back{
-      display:block;
-      text-align:center;
-      margin-top:20px;
-      color:white;
+      color:#fff;
       text-decoration:none;
-      font-weight:700;
+      font-weight:800;
     }
 
-    .back:hover{
-      text-decoration:underline;
+    .back:hover{ text-decoration:underline; }
+
+    .footer{
+      text-align:center;
+      margin-top:18px;
+      font-size:12px;
+      opacity:0.8;
     }
   </style>
 </head>
 
 <body>
+<div class="overlay">
+  <div class="glass">
 
-<div class="page">
-  <div class="glass-container">
+    <h1>All Reservations</h1>
 
-    <h2>All Reservations</h2>
+    <!-- ✅ FILTERS (go to servlet) -->
+    <form class="filters" method="get" action="<%=request.getContextPath()%>/filterReservations">
+      <select name="roomType">
+        <option value="All" <%= "All".equalsIgnoreCase(roomTypeVal) ? "selected" : "" %>>All</option>
+        <option value="Single" <%= "Single".equalsIgnoreCase(roomTypeVal) ? "selected" : "" %>>Single</option>
+        <option value="Double" <%= "Double".equalsIgnoreCase(roomTypeVal) ? "selected" : "" %>>Double</option>
+        <option value="Deluxe" <%= "Deluxe".equalsIgnoreCase(roomTypeVal) ? "selected" : "" %>>Deluxe</option>
+      </select>
 
-    <!-- FILTER FORM -->
-    <div class="filter-box">
-      <form action="<%=request.getContextPath()%>/filterReservations" method="get">
-        <select name="roomType">
-          <option value="All">All</option>
-          <option value="Single" <%= "Single".equals(filterRoomType) ? "selected" : "" %>>Single</option>
-          <option value="Double" <%= "Double".equals(filterRoomType) ? "selected" : "" %>>Double</option>
-          <option value="Deluxe" <%= "Deluxe".equals(filterRoomType) ? "selected" : "" %>>Deluxe</option>
-        </select>
+      <input type="date" name="fromDate" value="<%= fromDateVal != null ? fromDateVal : "" %>">
+      <input type="date" name="toDate" value="<%= toDateVal != null ? toDateVal : "" %>">
 
-        <input type="date" name="fromDate" value="<%= filterFrom %>">
-        <input type="date" name="toDate" value="<%= filterTo %>">
+      <button class="btn" type="submit">Apply Filters</button>
+      <a class="btn-clear" href="<%=request.getContextPath()%>/listReservations">Clear</a>
+    </form>
 
-        <button type="submit">Apply Filters</button>
-        <a class="clear" href="<%=request.getContextPath()%>/listReservations">Clear</a>
-      </form>
-    </div>
-
-    <!-- TABLE -->
     <table>
       <tr>
         <th>Reservation No</th>
@@ -230,19 +220,8 @@
         <td><%= r.getRoomType() %></td>
         <td><%= r.getCheckIn() %></td>
         <td><%= r.getCheckOut() %></td>
-        <td>
-          <a class="btn edit"
-             href="<%=request.getContextPath()%>/editReservation?reservationNumber=<%= r.getReservationNumber() %>">Edit</a>
-
-          <a class="btn delete"
-             href="<%=request.getContextPath()%>/deleteReservation?reservationNumber=<%= r.getReservationNumber() %>"
-             onclick="return confirm('Are you sure?');">Delete</a>
-
-          <a class="btn bill"
-             href="<%=request.getContextPath()%>/billPrint.jsp?reservationNumber=<%= r.getReservationNumber() %>">
-            🧾 Print to Bill
-          </a>
-
+        <td class="action">
+          <a href="billPrint.jsp?reservationNumber=<%= r.getReservationNumber() %>">🧾 Print Bill</a>
         </td>
       </tr>
       <%
@@ -255,14 +234,13 @@
       <% } %>
     </table>
 
-    <a class="back" href="dashboard.jsp">⬅ Back to Dashboard</a>
-
-    <div class="footer">
-      © <%= java.time.Year.now() %> Ocean View Resort
+    <div class="center">
+      <a class="back" href="dashboard.jsp">← Back to Dashboard</a>
     </div>
+
+    <div class="footer">© 2026 Ocean View Resort</div>
 
   </div>
 </div>
-
 </body>
 </html>
